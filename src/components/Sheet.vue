@@ -1,26 +1,48 @@
 <template>
-    <v-app>
-        <h5 class="pa-2" style="font-size: 1.64rem; line-height: 110%; font-weight: 400">Response</h5>
-        <v-card class="pa-2" style="font-size: 1.2rem;" flat>
-            <code style="font-size: 1em; display: block; overflow-x: auto; padding: 0.5em; background: rgb(240, 240, 240) none repeat scroll 0% 0%; color: rgb(68, 68, 68);">
-            <section style="overflow-y: scroll; max-height: 300px;">
-                <v-list-item style="margin-bottom: -15px;">
-                <pre>
-                    <span v-if="values != ''">{{ values }}</span>
-                </pre>
+    <v-card class="card-code pa-2" flat>
+        <h5 class="pa-2">Response</h5>
+        <code>
+            <section>
+                <v-list-item>
+                    <pre><span>{{ values }}</span></pre>
                 </v-list-item>
             </section>
-            </code>
-        </v-card>
-    </v-app>
+        </code>
+    </v-card>
 </template>
 <script>
     export default {
         name: 'sheet',
         props: {
             values: {
-                type: Array
+                type: Object
             }
         }
     }
 </script>
+<style scoped>
+    h5 {
+        font-size: 1.64rem;
+        line-height: 110%;
+        font-weight: 400;
+    }
+
+    code {
+        font-size: 1em;
+        display: block;
+        overflow-x: auto;
+        padding: 0.5em;
+        background: rgb(240, 240, 240) none repeat scroll 0% 0%;
+        color: rgb(68, 68, 68);
+    }
+
+    section {
+        overflow-y: scroll;
+        height: 70vh;
+        max-height: 100%;
+    }
+
+    .card-code {
+        font-size: 1.2rem;
+    }
+</style>
