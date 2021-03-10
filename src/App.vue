@@ -1,25 +1,28 @@
 <template>
   <v-app>
-    <Navbar/>
+    <Navbar></Navbar>
     <v-container class="my-5">
       <v-layout row wrap>
         <v-flex xs12 md6>
           <v-card class="pa-2" flat>
-            <v-form ref="form" v-model="valid">
+            <v-form ref="form" v-model="valid" @submit.prevent="get">
               <v-row>
                 <v-col cols="12" md="6">
-                  <v-text-field v-model="url" label="Url" :rules="urlRules" required></v-text-field>
+                  <v-text-field v-model="posts.url" label="Url" :rules="urlRules" required></v-text-field>
                 </v-col>
                 <v-col cols="12" md="6">
-                  <v-text-field v-model="sheetName" label="Sheet name" :rules="sheetNameRules" required></v-text-field>
+                  <v-text-field v-model="posts.sheetName" label="Sheet name" :rules="sheetNameRules" required></v-text-field>
                 </v-col>
-                <v-col v-for="(input, index) in ranges" :key="`rangeInput-${index}`" cols="12" md="6">
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="posts.key" label="Api key" :rules="keyRules" required></v-text-field>
+                </v-col>
+                <v-col v-for="(input, index) in posts.ranges" :key="`rangeInput-${index}`" cols="12" md="6">
                   <v-text-field v-model="input.range" label="Range" :rules="rangeRules" required></v-text-field>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="ml-2" style="cursor: pointer; white-space: nowrap;" @click="addField(input, ranges)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="ml-2" style="cursor: pointer; white-space: nowrap;" @click="addField(input, posts.ranges)">
                     <path fill="none" d="M0 0h24v24H0z"/>
                     <path fill="green" d="M11 11V7h2v4h4v2h-4v4h-2v-4H7v-2h4zm1 11C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/>
                   </svg>
-                  <svg v-show="ranges.length > 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="ml-2" style="cursor: pointer; white-space: nowrap;" @click="removeField(index, ranges)">
+                  <svg v-show="posts.ranges.length > 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="ml-2" style="cursor: pointer; white-space: nowrap;" @click="removeField(index, posts.ranges)">
                     <path fill="none" d="M0 0h24v24H0z"/>
                     <path fill="#EC4899" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/>
                   </svg>
@@ -27,29 +30,14 @@
               </v-row>
               <v-row>
                 <v-col md="6">
-                  <v-btn :disabled="!valid" color="success" class="mr-4">Send</v-btn>
+                  <v-btn type="submit" :disabled="!valid" color="success" class="mr-4">Send</v-btn>
                 </v-col>
               </v-row>
             </v-form>
           </v-card>
         </v-flex>
         <v-flex xs12 md6>
-          <h5 class="pa-2" style="font-size: 1.64rem; line-height: 110%; font-weight: 400">Response</h5>
-          <v-card class="pa-2" style="font-size: 1.2rem;" flat>
-            <code style="font-size: 1em; display: block; overflow-x: auto; padding: 0.5em; background: rgb(240, 240, 240) none repeat scroll 0% 0%; color: rgb(68, 68, 68);">
-              <section style="overflow-y: scroll; max-height: 300px;">
-                <pre style="white-space: pre-line;">
-                  {
-                    <v-list-item v-for="index in 10" :key="index" style="margin-bottom: -15px;">
-                      <pre style="white-space: nowrap;">
-                        <span>"id":</span> <span style="color: rgb(136, 0, 0);" v-if="index < 10">"{{ index }}",</span> <span style="color: rgb(136, 0, 0);" v-if="index == 10">"{{ index }}"</span>
-                      </pre>
-                    </v-list-item>
-                  }
-                </pre>
-              </section>
-            </code>
-          </v-card>
+          <Sheet :values=values></Sheet>
         </v-flex>
       </v-layout>
     </v-container>
@@ -57,27 +45,36 @@
 </template>
 <script>
   import Navbar from '@/components/Navbar'
+  import Sheet from '@/components/Sheet'
+  import Api from '@/services/Api';
 
   export default {
     name: 'App',
     components: {
-      Navbar
+      Navbar,
+      Sheet
     },
     data: () => ({
       valid: true,
-      url: '',
       urlRules: [
         v => !!v || 'Url is required'
       ],
-      sheetName: '',
       sheetNameRules: [
         v => !!v || 'Sheet name is required'
       ],
-      range: '',
+      keyRules: [
+        v => !!v || "Key is required"
+      ],
       rangeRules: [
         v => !!v || 'Range is required'
       ],
-      ranges: [{range: ""}]
+      posts: {
+        url: null,
+        sheetName: null,
+        key: null,
+        ranges: [{range: null}]
+      },
+      values: []
     }),
     methods: {
       addField(value, fieldType) {
@@ -85,7 +82,19 @@
       },
       removeField(index, fieldType) {
         fieldType.splice(index, 1);
-      }
+      },
+      get() {
+        let spreadsheetId = new RegExp("/spreadsheets/d/([a-zA-Z0-9-_]+)").exec(this.posts.url)[1];
+        if(this.posts.ranges.length == 1) {
+          Api.SingleGet(this.posts.key, spreadsheetId, this.posts.sheetName, this.posts.ranges, sheets => {
+            this.values = sheets.data;
+          });
+        } else {
+          Api.BatchGet(this.posts.key, spreadsheetId, this.posts.sheetName, this.posts.ranges, sheets => {
+            this.values = sheets.data;
+          });
+        }
+      },
     }
   };
 </script>
