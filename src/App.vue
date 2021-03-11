@@ -1,9 +1,9 @@
 <template>
   <v-app>
     <Navbar></Navbar>
-    <v-container class="my-5">
+    <v-container fill-height fluid>
       <v-layout row wrap>
-        <v-flex xs12 md6>
+        <v-flex class="pa-2" xs12 md6>
           <v-card class="pa-2" flat>
             <v-form ref="form" v-model="valid" @submit.prevent="get">
               <v-row>
@@ -43,7 +43,7 @@
             </v-form>
           </v-card>
         </v-flex>
-        <v-flex xs12 md6>
+        <v-flex class="pa-2" xs12 md6>
           <Sheet :values=values></Sheet>
         </v-flex>
       </v-layout>

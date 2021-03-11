@@ -28,6 +28,7 @@
     }
 
     code {
+        max-height: 75vh;
         font-size: 1em;
         display: block;
         overflow-x: auto;
@@ -36,13 +37,8 @@
         color: rgb(68, 68, 68);
     }
 
-    section {
-        overflow-y: scroll;
-        height: 70vh;
-        max-height: 100%;
-    }
-
     .card-code {
         font-size: 1.2rem;
+        max-height: 100%;
     }
 </style>
