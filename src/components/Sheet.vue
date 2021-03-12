@@ -4,7 +4,7 @@
         <code>
             <section>
                 <v-list-item>
-                    <pre><span>{{ values }}</span></pre>
+                    <pre><span>{{ data }}</span></pre>
                 </v-list-item>
             </section>
         </code>
@@ -14,7 +14,7 @@
     export default {
         name: 'sheet',
         props: {
-            values: {
+            data: {
                 type: Object
             }
         }

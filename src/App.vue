@@ -20,9 +20,6 @@
                 <v-col cols="12" md="6">
                   <v-text-field v-model="posts.sheetName" label="Sheet name" :rules="sheetNameRules" required></v-text-field>
                 </v-col>
-                <v-col cols="12" md="6">
-                  <v-select v-model="posts.select" label="Major dimension" :items="items" :rules="[v => !!v || 'Item is required']" required></v-select>
-                </v-col>
                 <v-col v-for="(input, index) in posts.ranges" :key="`rangeInput-${index}`" cols="12" md="6">
                   <v-text-field v-model="input.range" label="Range" :rules="rangeRules" required></v-text-field>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="ml-2" @click="addField(input, posts.ranges)">
@@ -44,7 +41,7 @@
           </v-card>
         </v-flex>
         <v-flex class="pa-2" xs12 md6>
-          <Sheet :values=values></Sheet>
+          <Sheet :data=data></Sheet>
         </v-flex>
       </v-layout>
     </v-container>
@@ -53,7 +50,10 @@
 <script>
   import Navbar from '@/components/Navbar'
   import Sheet from '@/components/Sheet'
-  import Api from '@/services/Api';
+  import Api from '@/services/Api'
+  import { db } from '@/firebase'
+
+  const sheetCollection = db.collection('sheets');
 
   export default {
     name: 'App',
@@ -75,18 +75,13 @@
       rangeRules: [
         v => !!v || 'Range is required'
       ],
-      items: [
-        'ROWS',
-        'COLUMNS'
-      ],
       posts: {
         url: null,
         sheetName: null,
         key: null,
-        select: null,
         ranges: [{range: null}]
       },
-      values: {}
+      data: {},
     }),
     methods: {
       addField(value, fieldType) {
@@ -95,15 +90,40 @@
       removeField(index, fieldType) {
         fieldType.splice(index, 1);
       },
+      nestedArrayToObj(data) {
+        let keys = data.shift();
+        let convertedData = data.map(function(row) {
+          return keys.reduce(function(obj, key, i) {
+            obj[key] = row[i];
+            return obj;
+          }, {});
+        });
+        return convertedData;
+      },
+      async save(data) {
+        try {
+          await sheetCollection.add({'values': data});
+        } catch (error) {
+          console.log(JSON.stringify(error));
+        }
+      },
       get() {
         let spreadsheetId = new RegExp("/spreadsheets/d/([a-zA-Z0-9-_]+)").exec(this.posts.url)[1];
         if(this.posts.ranges.length == 1) {
-          Api.SingleGet(this.posts.key, spreadsheetId, this.posts.sheetName, this.posts.ranges, this.posts.select, sheets => {
-            this.values = sheets.data;
+          Api.SingleGet(this.posts.key, spreadsheetId, this.posts.sheetName, this.posts.ranges, sheets => {
+            this.data = sheets.data;
+            this.save(this.nestedArrayToObj(this.data.values));
           });
         } else {
-          Api.BatchGet(this.posts.key, spreadsheetId, this.posts.sheetName, this.posts.ranges, this.posts.select, sheets => {
-            this.values = sheets.data;
+          Api.BatchGet(this.posts.key, spreadsheetId, this.posts.sheetName, this.posts.ranges, sheets => {
+            let valueRanges = {};
+            
+            this.data = sheets.data;
+            for(let i = 0; i < this.data.valueRanges.length; i++) {
+              valueRanges[i] = this.nestedArrayToObj(this.data.valueRanges[i].values);
+            }
+
+            this.save(valueRanges);
           });
         }
       },
